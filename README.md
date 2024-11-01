@@ -1,21 +1,41 @@
 # Team14_BE
 14조 백엔드
 
-✏ 6주차 PR 리뷰받고 싶은 내용
+✏ 9주차 PR 리뷰받고 싶은 내용
 ---
-저희 조가 만드는 서비스는 모르는 사람과도 함께 배달 주문을 해서 배달팁과 최소 주문 금액에 대한 부담을 덜 수 있게 하는 서비스입니다.
+```java
+@Service
+@Slf4j
+@RequiredArgsConstructor
+/** 결제 승인 서비스 */
+public class PaymentConfirmService {
 
-중간고사가 다가오다보니 진행이 많이 되지 않았습니다...
+	private final TossPaymentsClient tossPaymentsClient;
 
-1. 지금 수준에서 Spring Cloud를 통해 로드밸런싱을 수행해보고 싶습니다... 그렇지만 프로젝트 완성도가 떨어질 것 같아서 걱정됩니다. 허술해보이는 부분이 많은 것 같은데 멘토님이 보시기에 어떤지 궁금합니다!
+	private final PaymentValidationService paymentValidationService;
+	private final PaymentStatusUpdateService paymentStatusUpdateService;
+	private final PointUpdateService pointUpdateService;
 
-2. 앞으로 어떤 기술을 적용해보면 좋을지, 또는 코드를 보시면서 다른 방법을 적용하면 더 좋았을 것 같다고 생각하신 부분이 궁금합니다! 
+	@Transactional
+	public PaymentConfirmationResponse confirm(PaymentConfirmRequest request) {
+		// 1. 결제 상태 변경 (준비 -> 실행 중)
+		paymentStatusUpdateService.updatePaymentStatusToExecuting(request.orderId(), request.paymentKey());
+		// 2. 결제 유효성 검사
+		paymentValidationService.validate(request.orderId(), BigDecimal.valueOf(request.amount()));
+		// 3. 결제 승인 요청
+		PaymentConfirmationResponse response = tossPaymentsClient.confirmPayment(request);
+		// 4. 승인 결과에 따른 결제 상태 업데이트
+		paymentStatusUpdateService.updatePaymentStatus(new PaymentStatusUpdateCommand(request.paymentKey(), request.orderId(), response.paymentStatus()));
+		// 5. 포인트 충전
+		pointUpdateService.increasePoint(request.orderId());
+		return response;
+	}
 
-3. JwtUtil
+}
+```
+현재 결제 승인 과정에서 5가지 로직이 위와 같이 한 트랜잭션으로 수행되고 있습니다. <br>
+`confirm` 메소드에서 하나의 트랜잭션으로 5개의 로직이 수행될 때 “결제 상태 변경”과 같은 부가기능의 실패로 결제 승인에 성공하였음에도 <br> 
+DB에 올바르게 기록되지 못하는 상황을 방지하기 위해 트랜잭션을 분리할 수 있나요?
 
-   멘토님께서 조언해주신대로 JwtUtil을 스프링빈으로 등록하지 않고 정적 유틸 클래스로 작성함으로써 사용하고자 하였습니다. 다만, application.yaml에서 다루고 있는 변수(expireTime, secretKey)가 있다 보니 JwtUtil을 스프링빈으로 등록하는 것이 필요해졌습니다.
-   혹시 JwtUtil을 스프링빈으로 등록하지 않고 변수를 적용할 수 있는 방법을 아시나요?🥺
-
-    스프링빈으로 등록을 안 하면 사용시마다 생성자 주입을 통해 사용하게 될 것 같은데 스프링빈 등록과 비교해서 어떤 걸 올바른지 잘 모르겠습니다ㅜㅜ
-
-     혹시 이에 대한 명쾌한 해답이 있다면 조언해주시면 감사드리겠습니다:)
+현재 결제 승인 내부 로직 전체를 한 트랜잭션으로 수행 중인데 여기서 수행되는 몇몇의 기능은 별도의 트랜잭션에서 수행되도록 구현하고 싶은데 <br>
+어떤 방법이 좋을지 궁금합니다!
