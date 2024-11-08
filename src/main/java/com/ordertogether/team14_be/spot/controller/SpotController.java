@@ -14,50 +14,43 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class SpotController {
 
-	private final SpotService spotService;
+    private final SpotService spotService;
 
-	// Spot 전체 조회하기
-	@GetMapping("/api/v1/spot/{lat}/{lng}")
-	public ResponseEntity<List<SpotViewedResponse>> getSpot(
-			@PathVariable BigDecimal lat, @PathVariable BigDecimal lng) {
-		return ResponseEntity.ok(spotService.getSpot(lat, lng));
-	}
+    // Spot 생성하기
+    @PostMapping("/api/v1/spot")
+    public ResponseEntity<SpotCreationResponse> createSpot(
+        @RequestBody SpotCreationRequest spotCreationRequest) {
+        return new ResponseEntity<>(
+            spotService.createSpot(SpotMapper.INSTANCE.toSpotDto(spotCreationRequest)),
+            HttpStatus.CREATED);
+    }
 
-	// Spot 생성하기
-	@PostMapping("/api/v1/spot")
-	public ResponseEntity<SpotCreationResponse> createSpot(
-			@RequestBody SpotCreationRequest spotCreationRequest) {
-		return new ResponseEntity<>(
-				spotService.createSpot(SpotMapper.INSTANCE.toSpotDto(spotCreationRequest)),
-				HttpStatus.CREATED);
-	}
+    // Spot 상세 조회하기
+    @GetMapping("/api/v1/spot/{id}")
+    public ResponseEntity<SpotDetailResponse> getSpotDetail(@PathVariable Long id) {
+        return ResponseEntity.ok(spotService.getSpot(id));
+    }
 
-	// Spot 상세 조회하기
-	@GetMapping("/api/v1/spot/{id}")
-	public ResponseEntity<SpotDetailResponse> getSpotDetail(@PathVariable Long id) {
-		return ResponseEntity.ok(spotService.getSpot(id));
-	}
+    // 반경 n미터 내 Spot 조회하기
+    @GetMapping("/api/v1/spot/{lat}/{lng}") // 현재 위치의 좌표로 hash값이 같은 튜플을 조회
+    public ResponseEntity<List<SpotViewedResponse>> getSpotByGeoHash(
+        @PathVariable BigDecimal lat, @PathVariable BigDecimal lng) {
+        return ResponseEntity.ok(spotService.getSpotByGeoHash(lat, lng));
+    }
 
-	// 반경 n미터 내 Spot 조회하기
-	@GetMapping("/api/v1/spot/{lat}/{lng}") // 현재 위치의 좌표로 hash값이 같은 튜플을 조회
-	public ResponseEntity<List<SpotViewedResponse>> getSpotByGeoHash(
-			@PathVariable BigDecimal lat, @PathVariable BigDecimal lng) {
-		return ResponseEntity.ok(spotService.getSpotByGeoHash(lat, lng));
-	}
+    // Spot 수정하기
+    @PutMapping("/api/v1/spot")
+    public ResponseEntity<SpotCreationResponse> updateSpot(
+        @RequestBody SpotModifyRequest spotModifyRequest) {
+        return ResponseEntity.ok(
+            SpotMapper.INSTANCE.toSpotCreationResponse(
+                spotService.updateSpot(SpotMapper.INSTANCE.toSpotDto(spotModifyRequest))));
+    }
 
-	// Spot 수정하기
-	@PutMapping("/api/v1/spot")
-	public ResponseEntity<SpotCreationResponse> updateSpot(
-			@RequestBody SpotModifyRequest spotModifyRequest) {
-		return ResponseEntity.ok(
-				SpotMapper.INSTANCE.toSpotCreationResponse(
-						spotService.updateSpot(SpotMapper.INSTANCE.toSpotDto(spotModifyRequest))));
-	}
-
-	// Spot 삭제하기
-	@DeleteMapping("/api/v1/spot/{id}")
-	public ResponseEntity<Void> deleteSpot(@PathVariable Long id) {
-		spotService.deleteSpot(id);
-		return ResponseEntity.ok().build();
-	}
+    // Spot 삭제하기
+    @DeleteMapping("/api/v1/spot/{id}")
+    public ResponseEntity<Void> deleteSpot(@PathVariable Long id) {
+        spotService.deleteSpot(id);
+        return ResponseEntity.ok().build();
+    }
 }
