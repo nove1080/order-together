@@ -1,6 +1,7 @@
 package com.ordertogether.team14_be.auth.persistence;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ordertogether.team14_be.auth.token.TokenContext;
 import com.ordertogether.team14_be.member.application.exception.NotFoundMember;
 import com.ordertogether.team14_be.member.persistence.entity.Member;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +39,8 @@ public class JwtInterceptor implements HandlerInterceptor {
 				Member accessMember = objectMapper.readValue(member, Member.class);
 
 				request.setAttribute("member", accessMember);
+				TokenContext.addCurrentMemberId(accessMember.getId());
+				log.info("memberId : %s".formatted(accessMember.getId()));
 				return true;
 			}
 		} else {
