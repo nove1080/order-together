@@ -26,6 +26,8 @@ public class JwtInterceptor implements HandlerInterceptor {
 			return true;
 		}
 
+		logRequestDetails(request);
+
 		String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
 		String token = authorization.replaceAll("Bearer ", "");
 
@@ -50,5 +52,14 @@ public class JwtInterceptor implements HandlerInterceptor {
 			throw new NotFoundMember();
 		}
 		return false;
+	}
+
+	private static void logRequestDetails(HttpServletRequest request) {
+		String clientIp = request.getHeader("X-Forwarded-For"); // 프록시나 로드 밸런서 뒤에 있을 때 사용
+		if (clientIp == null || clientIp.isEmpty()) {
+			clientIp = request.getRemoteAddr(); // 직접 요청한 클라이언트 IP
+		}
+		log.info("Request URI = " + request.getRequestURI());
+		log.info("Client IP = " + clientIp);
 	}
 }
