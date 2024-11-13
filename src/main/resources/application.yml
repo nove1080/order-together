@@ -51,7 +51,7 @@ key:
     secret-key: ${JWT_SECRET_KEY}
 
 jwt:
-  expire-time: 1
+  expire-time: 1000000
 
 front:
   page:

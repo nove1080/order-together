@@ -36,11 +36,14 @@ public class JwtInterceptor implements HandlerInterceptor {
 				ObjectMapper objectMapper = new ObjectMapper();
 
 				String member = objectMapper.writeValueAsString(jwtUtil.decodeJwt(token).get("member"));
+				log.info("member = " + member);
 				Member accessMember = objectMapper.readValue(member, Member.class);
+				log.info("accessMember = " + accessMember);
 
 				request.setAttribute("member", accessMember);
-				TokenContext.addCurrentMemberId(accessMember.getId());
-				log.info("memberId : %s".formatted(accessMember.getId()));
+				Long memberId = Long.valueOf(jwtUtil.getSubject(token));
+				log.info("memberId = " + memberId);
+				TokenContext.addCurrentMemberId(memberId);
 				return true;
 			}
 		} else {
