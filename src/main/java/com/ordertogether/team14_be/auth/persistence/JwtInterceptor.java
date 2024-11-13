@@ -55,9 +55,9 @@ public class JwtInterceptor implements HandlerInterceptor {
 	}
 
 	private static void logRequestDetails(HttpServletRequest request) {
-		String clientIp = request.getHeader("X-Forwarded-For"); // 프록시나 로드 밸런서 뒤에 있을 때 사용
+		String clientIp = request.getHeader("X-Forwarded-For");
 		if (clientIp == null || clientIp.isEmpty()) {
-			clientIp = request.getRemoteAddr(); // 직접 요청한 클라이언트 IP
+			clientIp = request.getRemoteAddr();
 		}
 		log.info("Request URI = " + request.getRequestURI());
 		log.info("Client IP = " + clientIp);
