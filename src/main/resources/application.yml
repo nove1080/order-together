@@ -5,6 +5,7 @@ spring:
   datasource:
     driver-class-name: ${DRIVER_CLASS_NAME}
     username: ${USERNAME}
+    password: ${PASSWORD}
     url: ${URL}
 
   jpa:
@@ -32,14 +33,13 @@ logging:
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   redirect-url: ${KAKAO_REDIRECT_URL}
+  auth-token-url: ${KAKAO_AUTH_TOKEN_URL}
+  user-api-url: ${KAKAO_USER_API_URL}
 
-  auth:
-    token:
-      url: ${KAKAO_AUTH_TOKEN_URL}
-
-  user:
-    api:
-      url: ${KAKAO_USER_API_URL}
+pg:
+  toss:
+    secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
+    url: https://api.tosspayments.com
 
 pg:
   toss:
@@ -56,3 +56,8 @@ jwt:
 front:
   page:
     signup: ${FRONT_PAGE_SIGNUP}
+
+coolsms:
+  api:
+    key: ${COOLSMS_API_KEY}
+    secret: ${COOLSMS_API_SECRET}
